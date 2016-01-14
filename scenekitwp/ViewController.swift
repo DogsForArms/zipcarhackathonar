@@ -76,7 +76,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         scene.rootNode.addChildNode(ambientLightNode)
         
         let ship = scene.rootNode.childNodeWithName("ship", recursively: true)!
-        ship.position = SCNVector3(x: 0, y: 20 , z: 0)
+        ship.position = SCNVector3(x: 0, y: 0 , z: -20)
         
         
         scnView.scene = scene
@@ -147,7 +147,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         
     }
     
-    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
+    {
         
         guard let location = locations.last
         else
