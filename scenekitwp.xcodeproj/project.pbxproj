@@ -12,6 +12,9 @@
 		6B33E55F1C473BF1000E6701 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6B33E55D1C473BF1000E6701 /* Main.storyboard */; };
 		6B33E5611C473BF1000E6701 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B33E5601C473BF1000E6701 /* Assets.xcassets */; };
 		6B33E5641C473BF1000E6701 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6B33E5621C473BF1000E6701 /* LaunchScreen.storyboard */; };
+		6B33E56C1C473C53000E6701 /* ModelIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B33E56B1C473C53000E6701 /* ModelIO.framework */; };
+		6B33E56E1C473CC7000E6701 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B33E56D1C473CC7000E6701 /* art.scnassets */; };
+		6B33E5701C473E76000E6701 /* arrow.dae in Resources */ = {isa = PBXBuildFile; fileRef = 6B33E56F1C473E76000E6701 /* arrow.dae */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +25,9 @@
 		6B33E5601C473BF1000E6701 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6B33E5631C473BF1000E6701 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6B33E5651C473BF1000E6701 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6B33E56B1C473C53000E6701 /* ModelIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ModelIO.framework; path = System/Library/Frameworks/ModelIO.framework; sourceTree = SDKROOT; };
+		6B33E56D1C473CC7000E6701 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; name = art.scnassets; path = ../art.scnassets; sourceTree = "<group>"; };
+		6B33E56F1C473E76000E6701 /* arrow.dae */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml.dae; path = arrow.dae; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B33E56C1C473C53000E6701 /* ModelIO.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -38,6 +45,7 @@
 		6B33E54D1C473BF1000E6701 = {
 			isa = PBXGroup;
 			children = (
+				6B33E56B1C473C53000E6701 /* ModelIO.framework */,
 				6B33E5581C473BF1000E6701 /* scenekitwp */,
 				6B33E5571C473BF1000E6701 /* Products */,
 			);
@@ -54,6 +62,8 @@
 		6B33E5581C473BF1000E6701 /* scenekitwp */ = {
 			isa = PBXGroup;
 			children = (
+				6B33E56F1C473E76000E6701 /* arrow.dae */,
+				6B33E56D1C473CC7000E6701 /* art.scnassets */,
 				6B33E5591C473BF1000E6701 /* AppDelegate.swift */,
 				6B33E55B1C473BF1000E6701 /* ViewController.swift */,
 				6B33E55D1C473BF1000E6701 /* Main.storyboard */,
@@ -96,6 +106,7 @@
 				TargetAttributes = {
 					6B33E5551C473BF1000E6701 = {
 						CreatedOnToolsVersion = 7.2;
+						DevelopmentTeam = R3394T39YY;
 					};
 				};
 			};
@@ -122,7 +133,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B33E5701C473E76000E6701 /* arrow.dae in Resources */,
 				6B33E5641C473BF1000E6701 /* LaunchScreen.storyboard in Resources */,
+				6B33E56E1C473CC7000E6701 /* art.scnassets in Resources */,
 				6B33E5611C473BF1000E6701 /* Assets.xcassets in Resources */,
 				6B33E55F1C473BF1000E6701 /* Main.storyboard in Resources */,
 			);
@@ -247,10 +260,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = scenekitwp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = zipcar.scenekitwp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
 		};
@@ -258,10 +274,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = scenekitwp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = zipcar.scenekitwp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Release;
 		};
