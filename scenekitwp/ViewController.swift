@@ -16,7 +16,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate
 {
 
     
-
+    @IBOutlet weak var dist: UILabel!
+    @IBOutlet weak var dx: UILabel!
+    @IBOutlet weak var dy: UILabel!
+    @IBOutlet weak var dz: UILabel!
     
     
     var captureDevice: AVCaptureDevice?
@@ -53,12 +56,15 @@ class ViewController: UIViewController, CLLocationManagerDelegate
     }
     
     var cameraNode: SCNNode!
+    var arrowNode: SCNNode!
+    
     @IBOutlet weak var scnView: SCNView!
     func setupScene()
     {
         let scene = SCNScene(named: "art.scnassets/ship.scn")!
         cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
+        
         scene.rootNode.addChildNode(cameraNode)
         
         cameraNode.position = SCNVector3(x:0, y:0, z:0)
@@ -66,7 +72,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         let lightNode = SCNNode()
         lightNode.light = SCNLight()
         lightNode.light!.type = SCNLightTypeOmni
-        lightNode.position = SCNVector3(x: 0, y: 10, z: 10)
+        lightNode.position = SCNVector3(x: 0, y: -10, z: 10)
         scene.rootNode.addChildNode(lightNode)
         
         let ambientLightNode = SCNNode()
@@ -75,9 +81,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         ambientLightNode.light!.color = UIColor.darkGrayColor()
         scene.rootNode.addChildNode(ambientLightNode)
         
-        let ship = scene.rootNode.childNodeWithName("ship", recursively: true)!
-        ship.position = SCNVector3(x: 0, y: 0 , z: -20)
+        arrowNode = scene.rootNode.childNodeWithName("ship", recursively: true)!
+        arrowNode.position = SCNVector3(x: 20, y: 0 , z: 0)
         
+        
+        arrowNode.runAction(SCNAction.repeatActionForever(SCNAction.rotateByX(0, y: 0, z: 1, duration: 1)))
+        
+//        let arrowScale: Float = 1.0
+//        arrowNode.scale = SCNVector3(x: arrowScale, y: arrowScale, z: arrowScale)
         
         scnView.scene = scene
         scnView.backgroundColor = UIColor.clearColor()
@@ -93,10 +104,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         return SCNVector4Make(rq.x, rq.y, rq.z, rq.w);
     }
     
-    
-
-    
-    func latLonToEcef(lat: Double, lon: Double, alt: Double) -> (x: Double, y:Double, z:Double)
+    func latLonToEcef(lat: Double, lon: Double, alt: Double) -> SCNVector3
     {
         let degreesToRadians = M_PI/180.0
         let WGS84_A = 6378137.0             //  WGS 84 semi-major axis const in meters
@@ -113,7 +121,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         let y = (N + alt) * clat * slon;
         let z = (N * (1.0 - WGS84_E * WGS84_E) + alt) * slat;
         
-        return (x, y, z)
+        return SCNVector3(x: Float(x), y: Float(y), z: Float(z))
     }
     
     let motionManager: CMMotionManager = CMMotionManager()
@@ -131,8 +139,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate
             }
         }
     }
-    
-    
+
+    let bballCourt = CLLocationCoordinate2D(latitude: 42.350883, longitude:  -71.046777)
+    let pointInTheNorth = CLLocationCoordinate2D(latitude: 79.738839, longitude: -71.566170)
     
     var locationManager: CLLocationManager = CLLocationManager()
     func setupLocationManager()
@@ -147,6 +156,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         
     }
     
+    
+    var lastAccuracy = 80.0
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
     {
         
@@ -156,11 +167,72 @@ class ViewController: UIViewController, CLLocationManagerDelegate
             return
         }
         
+        print("horizontal Accuracy \(location.horizontalAccuracy)")
+        
+        if (location.horizontalAccuracy <= lastAccuracy)
+        {
+            lastAccuracy = location.horizontalAccuracy
+        }
+        
         let accuracy = location.horizontalAccuracy
         
-        print("\(location.coordinate.latitude), \(location.coordinate.longitude), \(location.altitude)")
-        let xyz = latLonToEcef(location.coordinate.latitude, lon: location.coordinate.longitude, alt: location.altitude)
-        print(xyz)
+        print("Me: \(location.coordinate), \(location.altitude)")
+        let meXyz = latLonToEcef(
+            location.coordinate.latitude,
+            lon: location.coordinate.longitude,
+            alt: location.altitude)
+        
+//        self.dx.text = "dx \(dx)"
+//        self.dy.text = "dy \(dy)"
+//        self.dz.text = "dz \(dz)"
+//        self.dist.text = "dist \(dist)"
+        
+        let bballXyz = latLonToEcef(bballCourt.latitude, lon: bballCourt.longitude, alt: location.altitude + 3)
+        
+        let degreeStep = 0.00001
+        let northOfMe = CLLocationCoordinate2D(
+            latitude: location.coordinate.latitude + degreeStep,
+            longitude: location.coordinate.longitude)
+        let stepNorth = latLonToEcef(northOfMe.latitude, lon: northOfMe.longitude, alt: location.altitude)
+        
+        let westOfMe = CLLocationCoordinate2D(
+            latitude: location.coordinate.latitude,
+            longitude: location.coordinate.longitude - degreeStep)
+        let stepWest = latLonToEcef(westOfMe.latitude, lon: westOfMe.longitude, alt: location.altitude)
+        
+        let stepUp = latLonToEcef(
+            location.coordinate.latitude,
+            lon: location.coordinate.longitude,
+            alt: location.altitude + 1)
+        
+        //        let northIsh = (northXyz - meXyz).normalize().scale(30) + meXyz
+//        print("dN \((stepNorth - meXyz).length())")
+//        print("dW \((stepWest - meXyz).length())")
+//        print("dU \((stepUp - meXyz).length())")
+        
+        
+        let phoneX = (stepNorth - meXyz).normalize()
+        let phoneY = (stepWest - meXyz).normalize()
+        let phoneZ = (stepUp - meXyz).normalize()
+        
+//        print("x \(phoneX) length: \(phoneX.length())")
+//        print("y \(phoneY) length: \(phoneY.length())")
+//        print("z \(phoneZ) length: \(phoneZ.length())")
+        
+        let row1 = SCNVector3(phoneX.x, phoneX.y, phoneX.z)
+        let row2 = SCNVector3(phoneY.x, phoneY.y, phoneY.z)
+        let row3 = SCNVector3(phoneZ.x, phoneZ.y, phoneZ.z)
+        
+        
+        let itRelativeToMe = bballXyz - meXyz
+        let itRotatedRelativeToEarth = SCNVector3(
+            row1.dotProduct(itRelativeToMe),
+            row2.dotProduct(itRelativeToMe),
+            row3.dotProduct(itRelativeToMe))
+
+        
+        arrowNode.position = itRotatedRelativeToEarth
+        
     }
 
     

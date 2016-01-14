@@ -15,6 +15,7 @@
 		6B33E56C1C473C53000E6701 /* ModelIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B33E56B1C473C53000E6701 /* ModelIO.framework */; };
 		6B33E56E1C473CC7000E6701 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B33E56D1C473CC7000E6701 /* art.scnassets */; };
 		6B33E5701C473E76000E6701 /* arrow.dae in Resources */ = {isa = PBXBuildFile; fileRef = 6B33E56F1C473E76000E6701 /* arrow.dae */; };
+		6B9EA8681C47FC1F00F88F97 /* SCNVector3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9EA8671C47FC1F00F88F97 /* SCNVector3.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		6B33E56B1C473C53000E6701 /* ModelIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ModelIO.framework; path = System/Library/Frameworks/ModelIO.framework; sourceTree = SDKROOT; };
 		6B33E56D1C473CC7000E6701 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; name = art.scnassets; path = ../art.scnassets; sourceTree = "<group>"; };
 		6B33E56F1C473E76000E6701 /* arrow.dae */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml.dae; path = arrow.dae; sourceTree = "<group>"; };
+		6B9EA8671C47FC1F00F88F97 /* SCNVector3.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SCNVector3.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +68,7 @@
 				6B33E56D1C473CC7000E6701 /* art.scnassets */,
 				6B33E5591C473BF1000E6701 /* AppDelegate.swift */,
 				6B33E55B1C473BF1000E6701 /* ViewController.swift */,
+				6B9EA8671C47FC1F00F88F97 /* SCNVector3.swift */,
 				6B33E55D1C473BF1000E6701 /* Main.storyboard */,
 				6B33E5601C473BF1000E6701 /* Assets.xcassets */,
 				6B33E5621C473BF1000E6701 /* LaunchScreen.storyboard */,
@@ -150,6 +153,7 @@
 			files = (
 				6B33E55C1C473BF1000E6701 /* ViewController.swift in Sources */,
 				6B33E55A1C473BF1000E6701 /* AppDelegate.swift in Sources */,
+				6B9EA8681C47FC1F00F88F97 /* SCNVector3.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,6 +307,7 @@
 				6B33E56A1C473BF1000E6701 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
