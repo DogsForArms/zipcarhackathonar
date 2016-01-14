@@ -75,12 +75,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         ambientLightNode.light!.color = UIColor.darkGrayColor()
         scene.rootNode.addChildNode(ambientLightNode)
         
-        let ship = scene.rootNode.childNodeWithName("ship", recursively: true)!
-        ship.position = SCNVector3(x: 0, y: 0 , z: -20)
+        let ship = scene.rootNode.childNodeWithName("arrow", recursively: true)!
+        ship.position = SCNVector3(x: 0, y: 5 , z: -20)
         
         
         scnView.scene = scene
         scnView.backgroundColor = UIColor.clearColor()
+        scnView.allowsCameraControl = true
+        print(ship.position)
     }
     
     func orientationFromCMQuaternion(q: CMQuaternion) -> SCNQuaternion
