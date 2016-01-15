@@ -12,38 +12,38 @@ import AVFoundation
 import CoreMotion
 import CoreLocation
 
-class ViewController: UIViewController, CLLocationManagerDelegate
+class ARViewController: UIViewController, CLLocationManagerDelegate
 {
-
-    
+//
     @IBOutlet weak var dist: UILabel!
     @IBOutlet weak var dx: UILabel!
     @IBOutlet weak var dy: UILabel!
     @IBOutlet weak var dz: UILabel!
     
     
+    var poiOpt: CLLocationCoordinate2D?
+    
     var captureDevice: AVCaptureDevice?
+    var captureSession: AVCaptureSession!
     var previewLayer: AVCaptureVideoPreviewLayer?
     
     @IBOutlet weak var captureView: UIView!
     func setupVideoCapture()
     {
-        let captureSession = AVCaptureSession()
+        captureSession = AVCaptureSession()
         captureSession.sessionPreset = AVCaptureSessionPresetHigh// AVCaptureSessionPresetLow
         let devices = AVCaptureDevice.devices()
         print(devices)
         
-        for device in devices {
-            // Make sure this particular device supports video
-            if (device.hasMediaType(AVMediaTypeVideo)) {
-                // Finally check the position and confirm we've got the back camera
-                if(device.position == AVCaptureDevicePosition.Back) {
-                    captureDevice = device as? AVCaptureDevice
-                }
-            }
-        }
+        let videoDevices = devices.filter
+        {
+            return $0.hasMediaType(AVMediaTypeVideo) &&
+                    $0.position == .Back &&
+                    ($0 as? AVCaptureDevice != nil)
+        } as! [AVCaptureDevice]
         
-        if let capDevice = captureDevice
+        captureDevice = videoDevices.first
+        if let _ = captureDevice
         {
             try! captureSession.addInput(AVCaptureDeviceInput(device: captureDevice))
     
@@ -57,14 +57,16 @@ class ViewController: UIViewController, CLLocationManagerDelegate
     
     var cameraNode: SCNNode!
     var arrowNode: SCNNode!
+    var arrowPosition: SCNVector3!
+    var timer: CADisplayLink!
     
     @IBOutlet weak var scnView: SCNView!
     func setupScene()
     {
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        let scene = SCNScene(named: "art.scnassets/arrow.scn")!
         cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
-        
+        cameraNode.camera?.automaticallyAdjustsZRange = true
         scene.rootNode.addChildNode(cameraNode)
         
         cameraNode.position = SCNVector3(x:0, y:0, z:0)
@@ -81,17 +83,31 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         ambientLightNode.light!.color = UIColor.darkGrayColor()
         scene.rootNode.addChildNode(ambientLightNode)
         
-        arrowNode = scene.rootNode.childNodeWithName("ship", recursively: true)!
-        arrowNode.position = SCNVector3(x: 20, y: 0 , z: 0)
-        
+        arrowNode = scene.rootNode.childNodeWithName("arrow", recursively: true)!
+        arrowPosition = SCNVector3(x: 0, y: 5 , z: -20)
+        arrowNode.rotation = SCNVector4(1, 0.0, 0.0, Float(M_PI/2))
+//        drawArrow()
+//        animateArrow()
         
         arrowNode.runAction(SCNAction.repeatActionForever(SCNAction.rotateByX(0, y: 0, z: 1, duration: 1)))
-        
-//        let arrowScale: Float = 1.0
-//        arrowNode.scale = SCNVector3(x: arrowScale, y: arrowScale, z: arrowScale)
+        let arrowScale: Float = 4.0
+        arrowNode.scale = SCNVector3(x: arrowScale, y: arrowScale, z: arrowScale)
         
         scnView.scene = scene
         scnView.backgroundColor = UIColor.clearColor()
+        
+        timer = CADisplayLink(target: self, selector: Selector("animLoop"))
+        timer.addToRunLoop(NSRunLoop.mainRunLoop(), forMode: NSDefaultRunLoopMode)
+    }
+    
+    var arrowZ: Float = 0
+    var arrowZSeeds: Float = 0
+    func animLoop()
+    {
+        arrowZSeeds += 0.1
+        arrowZ = 3 * sinf(arrowZSeeds)
+//        print("\(arrowZSeeds), \(arrowZ)")
+//        drawArrow()
     }
     
     func orientationFromCMQuaternion(q: CMQuaternion) -> SCNQuaternion
@@ -127,10 +143,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate
     let motionManager: CMMotionManager = CMMotionManager()
     func setupMotionTracking()
     {
-        motionManager.accelerometerUpdateInterval = 1/60
+        let updateInterval = 1/30.0
+        motionManager.accelerometerUpdateInterval = updateInterval
+        motionManager.deviceMotionUpdateInterval = updateInterval
         
-        //CMAttitudeReferenceFrameXTrueNorthZVertical
-        motionManager.startDeviceMotionUpdatesUsingReferenceFrame(CMAttitudeReferenceFrame.XTrueNorthZVertical, toQueue: NSOperationQueue.mainQueue()) {
+        motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
+            .XTrueNorthZVertical,
+            toQueue: NSOperationQueue.mainQueue()) {
             motionDevice, error in
             
             if let attitude = motionDevice?.attitude
@@ -140,8 +159,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         }
     }
 
-    let bballCourt = CLLocationCoordinate2D(latitude: 42.350883, longitude:  -71.046777)
-    let pointInTheNorth = CLLocationCoordinate2D(latitude: 79.738839, longitude: -71.566170)
+
     
     var locationManager: CLLocationManager = CLLocationManager()
     func setupLocationManager()
@@ -153,90 +171,108 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         locationManager.requestAlwaysAuthorization()
         
         locationManager.startUpdatingLocation()
-        
     }
     
-    
-    var lastAccuracy = 80.0
+    var lastLocation: CLLocation?
+    var lastPosition: SCNVector3?
+    var lastAccuracy = 1000.0
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
     {
         
-        guard let location = locations.last
+        guard let location = locations.last, poi = poiOpt where location.horizontalAccuracy <= lastAccuracy
+                                                                || location.horizontalAccuracy <= 50
         else
         {
             return
         }
         
-        print("horizontal Accuracy \(location.horizontalAccuracy)")
+        print("horizontal Accuracy \(location.horizontalAccuracy) \(location.verticalAccuracy)")
         
-        if (location.horizontalAccuracy <= lastAccuracy)
-        {
-            lastAccuracy = location.horizontalAccuracy
-        }
+        let altitude = location.altitude
         
-        let accuracy = location.horizontalAccuracy
-        
-        print("Me: \(location.coordinate), \(location.altitude)")
+        lastAccuracy = location.horizontalAccuracy
+
         let meXyz = latLonToEcef(
             location.coordinate.latitude,
             lon: location.coordinate.longitude,
-            alt: location.altitude)
+            alt: altitude)
         
-//        self.dx.text = "dx \(dx)"
-//        self.dy.text = "dy \(dy)"
-//        self.dz.text = "dz \(dz)"
-//        self.dist.text = "dist \(dist)"
+        let poiXyz = latLonToEcef(poi.latitude, lon: poi.longitude, alt: altitude + 3)
         
-        let bballXyz = latLonToEcef(bballCourt.latitude, lon: bballCourt.longitude, alt: location.altitude + 3)
-        
-        let degreeStep = 0.00001
+        let degreeStep = 0.1
         let northOfMe = CLLocationCoordinate2D(
             latitude: location.coordinate.latitude + degreeStep,
             longitude: location.coordinate.longitude)
-        let stepNorth = latLonToEcef(northOfMe.latitude, lon: northOfMe.longitude, alt: location.altitude)
+        let stepNorth = latLonToEcef(northOfMe.latitude, lon: northOfMe.longitude, alt: altitude)
         
         let westOfMe = CLLocationCoordinate2D(
             latitude: location.coordinate.latitude,
             longitude: location.coordinate.longitude - degreeStep)
-        let stepWest = latLonToEcef(westOfMe.latitude, lon: westOfMe.longitude, alt: location.altitude)
+        let stepWest = latLonToEcef(westOfMe.latitude, lon: westOfMe.longitude, alt: altitude)
         
         let stepUp = latLonToEcef(
             location.coordinate.latitude,
             lon: location.coordinate.longitude,
-            alt: location.altitude + 1)
-        
-        //        let northIsh = (northXyz - meXyz).normalize().scale(30) + meXyz
-//        print("dN \((stepNorth - meXyz).length())")
-//        print("dW \((stepWest - meXyz).length())")
-//        print("dU \((stepUp - meXyz).length())")
-        
+            alt: altitude + 1)
+
         
         let phoneX = (stepNorth - meXyz).normalize()
         let phoneY = (stepWest - meXyz).normalize()
         let phoneZ = (stepUp - meXyz).normalize()
         
-//        print("x \(phoneX) length: \(phoneX.length())")
-//        print("y \(phoneY) length: \(phoneY.length())")
-//        print("z \(phoneZ) length: \(phoneZ.length())")
-        
         let row1 = SCNVector3(phoneX.x, phoneX.y, phoneX.z)
         let row2 = SCNVector3(phoneY.x, phoneY.y, phoneY.z)
         let row3 = SCNVector3(phoneZ.x, phoneZ.y, phoneZ.z)
         
+
+        print(poi, altitude)
+        print(poiXyz)
+//        print(row1)
+//        print(row2)
+//        print(row3)
         
-        let itRelativeToMe = bballXyz - meXyz
-        let itRotatedRelativeToEarth = SCNVector3(
+        let itRelativeToMe = poiXyz - meXyz
+        let itRotatedRelativeToEarf = SCNVector3(
             row1.dotProduct(itRelativeToMe),
             row2.dotProduct(itRelativeToMe),
             row3.dotProduct(itRelativeToMe))
 
+        arrowPosition = itRotatedRelativeToEarf
         
-        arrowNode.position = itRotatedRelativeToEarth
         
+        let currentLocation = CLLocation(latitude: poi.latitude, longitude: poi.longitude)
+        
+        if let last = lastPosition
+        {
+            print("diff \((last - arrowPosition).length())")
+            
+        }
+
+        if let lastLoc = lastLocation
+        {
+            print("other distance \(currentLocation.distanceFromLocation(lastLoc))")
+        }
+        
+        lastLocation = currentLocation
+        lastPosition = arrowPosition
+        
+        animateArrow()
+//        print("arrowZ: \( arrowZ )")
+    }
+    
+    func drawArrow()
+    {
+//        arrowNode.position = arrowPosition
+        arrowNode.position.z = arrowZ
+    }
+    func animateArrow()
+    {
+//                arrowNode.position = arrowPosition
+        arrowNode.runAction(SCNAction.moveTo(arrowPosition, duration: 0.2))
     }
 
     
-    
+    //view controller and interactions
     override func viewDidLoad()
     {
         super.viewDidLoad()
@@ -247,16 +283,38 @@ class ViewController: UIViewController, CLLocationManagerDelegate
         setupLocationManager()
 
         view.backgroundColor = UIColor.redColor()
-        
     }
+    override func viewWillAppear(animated: Bool)
+    {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: true)
     
+    }
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.navigationController?.setNavigationBarHidden(false, animated: true)
+        captureSession?.stopRunning()
+        motionManager.stopDeviceMotionUpdates()
+        locationManager.stopUpdatingLocation()
+        timer.removeFromRunLoop(NSRunLoop.mainRunLoop(), forMode: NSDefaultRunLoopMode)
+    }
     
 
     override func didReceiveMemoryWarning()
     {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
+    
+    @IBAction func back(sender: AnyObject)
+    {
+        self.navigationController?.popViewControllerAnimated(true)
+    }
+    
+    deinit
+    {
+        print("GONE")
+    }
+    
 
 
 }
